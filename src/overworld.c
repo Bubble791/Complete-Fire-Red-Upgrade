@@ -1620,7 +1620,7 @@ static const u8* TryUseFlashInDarkCave(void)
 
 	if (gSpecialVar_LastResult && HasBadgeToUseFlash())
 	{
-		if ((Var8004 = gFieldEffectArguments[0] = PartyHasMonWithFieldMovePotential(MOVE_FLASH, ITEM_TM70_FLASH, 0)) < PARTY_SIZE)
+		if ((Var8004 = gFieldEffectArguments[0] = PartyHasMonWithFieldMovePotential(MOVE_FLASH, ITEM_TM70, 0)) < PARTY_SIZE)
 			return EventScript_UseFlash;
 	}
 
@@ -2074,20 +2074,10 @@ bool8 IsCurrentAreaAutumn(void)
 
 bool8 IsCurrentAreaWinter(void)
 {
-	#ifdef UNBOUND
+	#ifdef NEW_BATTLE_BACKGROUNDS
 		u8 mapSec = GetCurrentRegionMapSectionId();
-		return mapSec == MAPSEC_FROZEN_HEIGHTS
-			|| mapSec == MAPSEC_ROUTE_1
-			|| mapSec == MAPSEC_BELLIN_TOWN
-			|| mapSec == MAPSEC_ICICLE_CAVE
-			|| mapSec == MAPSEC_ROUTE_8
-			|| mapSec == MAPSEC_BLIZZARD_CITY
-			|| mapSec == MAPSEC_FROZEN_FOREST
-			|| mapSec == MAPSEC_POKEMON_LEAGUE
-			|| (mapSec == MAPSEC_VICTORY_ROAD
-			 && MAP_IS(VICTORY_ROAD_MOUNTAINSIDE))
-			|| (mapSec == MAPSEC_HIDDEN_GROTTO
-			 && MAP_IS(HIDDEN_GROTTO_WINTER));
+		return mapSec == MAPSEC_ROUTE_12;
+		return mapSec == MAPSEC_ROUTE_12 || mapSec == MAPSEC_RUIN_VALLEY;		
 	#else
 		return FALSE;
 	#endif
@@ -2095,15 +2085,23 @@ bool8 IsCurrentAreaWinter(void)
 
 bool8 IsCurrentAreaDesert(void)
 {
-	#ifdef UNBOUND
+	#ifdef NEW_BATTLE_BACKGROUNDS
 		u8 mapSec = GetCurrentRegionMapSectionId();
-		return mapSec == MAPSEC_GREAT_DESERT
-			|| mapSec == MAPSEC_GURUN_TOWN;
+		return mapSec == MAPSEC_BERRY_FOREST;
 	#else
 		return FALSE;
 	#endif
 }
 
+bool8 IsCurrentAreaHotCave(void)
+{
+	#ifdef NEW_BATTLE_BACKGROUNDS
+		u8 mapSec = GetCurrentRegionMapSectionId();
+		return mapSec == MAPSEC_ROUTE_12; // Scalding Spa is here
+	#else
+		return FALSE;
+	#endif
+}
 bool8 IsCurrentAreaSwamp(void)
 {
 	#ifdef UNBOUND

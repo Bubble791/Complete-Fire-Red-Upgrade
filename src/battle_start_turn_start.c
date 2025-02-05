@@ -105,7 +105,7 @@ static void SavePartyItems(void);
 static void TryPrepareTotemBoostInBattleSands(void);
 static void TrySetupRaidBossRepeatedAttack(u8 turnActionNumber);
 static u8 GetWhoStrikesFirstUseLastBracketCalc(u8 bank1, u8 bank2);
-static u32 BoostSpeedInWeather(u8 ability, u8 itemEffect, u32 speed);
+static u32 BoostSpeedInWeather(u8 ability, u8 itemEffect, u32 speed, u8 bank);
 static u32 BoostSpeedByItemEffect(u8 itemEffect, u8 itemQuality, u16 species, u32 speed, bool8 isDynamaxed);
 static void TryClearLevelCapKeptOn(void);
 
@@ -2215,14 +2215,20 @@ s32 BracketCalc(u8 bank, u8 action, u16 move)
 			}
 		}
 
-		if (ability == ABILITY_STALL)
+		if (ability == ABILITY_STALL && !(SpeciesHasBeadsofRuin(SPECIES(bank))
+										|| SpeciesHasSwordofRuin(SPECIES(bank))
+										|| SpeciesHasTabletsofRuin(SPECIES(bank))
+										|| SpeciesHasVesselofRuin(SPECIES(bank))))
 			return -1;
+		
+		if (SPLIT(gCurrentMove) == SPLIT_STATUS && ability == ABILITY_MOLDBREAKER && SpeciesHasMyceliumMight(SPECIES(bank)))
+			return -2;
 	}
 
 	return 0;
 }
 
-static u32 BoostSpeedInWeather(u8 ability, u8 itemEffect, u32 speed)
+static u32 BoostSpeedInWeather(u8 ability, u8 itemEffect, u32 speed, u8 bank)
 {
 	if (WEATHER_HAS_EFFECT) {
 		switch (ability) {
@@ -2242,6 +2248,17 @@ static u32 BoostSpeedInWeather(u8 ability, u8 itemEffect, u32 speed)
 				if (gBattleWeather & WEATHER_HAIL_ANY)
 					speed *= 2;
 				break;
+			case ABILITY_QUARKDRIVE:
+				if(bank != 255)
+				{
+					if (gTerrainType == ELECTRIC_TERRAIN
+					&& GetHighestStat(bank) == STAT_SPEED && !SpeciesHasProtosynthesis(SPECIES(bank)))
+						speed = (speed * 15) / 10;
+
+					if (IsSunWeatherActive(bank) && GetHighestStat(bank) == STAT_SPEED && SpeciesHasProtosynthesis(SPECIES(bank)))
+						speed = (speed * 15) / 10;
+				}
+			break;
 		}
 	}
 
@@ -2291,7 +2308,7 @@ u32 SpeedCalc(u8 bank)
 	speed = (rawSpeed * gStatStageRatios[gBattleMons[bank].statStages[STAT_STAGE_SPEED-1]][0]) / gStatStageRatios[gBattleMons[bank].statStages[STAT_STAGE_SPEED-1]][1];
 
 	//Check for abilities that alter speed
-	speed = BoostSpeedInWeather(ability, itemEffect, speed);
+	speed = BoostSpeedInWeather(ability, itemEffect, speed, bank);
 
 	switch (ability) {
 		case ABILITY_UNBURDEN:
@@ -2350,6 +2367,7 @@ u32 SpeedCalcMon(u8 side, struct Pokemon* mon) //Used for the AI
 	u8 itemEffect = (ability != ABILITY_KLUTZ) ? ItemId_GetHoldEffect(mon->item) : 0;
 	u8 itemQuality = ItemId_GetHoldEffectParam(mon->item);
 	u8 statVal = 6;
+	u8 bank = GetBankFromPartyData(mon);
 
 	#ifdef FLAG_WEIGHT_SPEED_BATTLE
 	if (FlagGet(FLAG_WEIGHT_SPEED_BATTLE))
@@ -2362,6 +2380,7 @@ u32 SpeedCalcMon(u8 side, struct Pokemon* mon) //Used for the AI
 	if (gSideTimers[side].stickyWeb
 	&& IsMonAffectedByHazards(mon)
 	&& ability != ABILITY_CLEARBODY
+	&& ITEM_EFFECT(gActiveBattler) != ITEM_EFFECT_CLEAR_AMULET
 	&& CheckMonGrounding(mon))
 	{
 		if (ability == ABILITY_CONTRARY) //Gets a speed boost
@@ -2378,7 +2397,16 @@ u32 SpeedCalcMon(u8 side, struct Pokemon* mon) //Used for the AI
 	speed = (speed * gStatStageRatios[statVal][0]) / gStatStageRatios[statVal][1];
 
 	//Check for abilities that alter speed
-	speed = BoostSpeedInWeather(ability, itemEffect, speed);
+	speed = BoostSpeedInWeather(ability, itemEffect, speed, 255);
+
+	if(ability == ABILITY_QUARKDRIVE)
+	{
+		if (gTerrainType == ELECTRIC_TERRAIN && GetHighestStatMon(mon) == STAT_SPEED && !SpeciesHasProtosynthesis(mon->species))
+				speed = (speed * 15) / 10;
+
+		if (IsSunWeatherActive(bank) && GetHighestStatMon(mon) == STAT_SPEED && SpeciesHasProtosynthesis(mon->species))
+				speed = (speed * 15) / 10;
+	}
 
 	switch (ability) {
 		case ABILITY_SLOWSTART:

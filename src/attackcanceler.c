@@ -71,7 +71,8 @@ void atk00_attackcanceler(void)
 			for (i = 0; i < gBattlersCount; ++i)
 			{
 				if (i != gBankAttacker
-				&& gSpecialAbilityFlags[ABILITY(i)].gMoldBreakerIgnoredAbilities)
+				&& ((gSpecialAbilityFlags[ABILITY(i)].gMoldBreakerIgnoredAbilities && !SpeciesHasMyceliumMight(SPECIES(gBankAttacker)))
+				|| (gSpecialAbilityFlags[ABILITY(i)].gMyceliumMighIgnoredAbilities && SpeciesHasMyceliumMight(SPECIES(gBankAttacker)) && SPLIT(gCurrentMove) == SPLIT_STATUS)))
 				{
 					gNewBS->DisabledMoldBreakerAbilities[i] = gBattleMons[i].ability; //Temporarily disable all relevant abilities on the field
 					gBattleMons[i].ability = ABILITY_NONE;
@@ -210,6 +211,7 @@ static u8 AtkCanceller_UnableToUseMove(void)
 		case CANCELLER_FLAGS: // flags clear
 			gBattleMons[gBankAttacker].status2 &= ~(STATUS2_DESTINY_BOND);
 			gStatuses3[gBankAttacker] &= ~(STATUS3_GRUDGE);
+			gStatuses3[gBankAttacker] &= ~(STATUS3_GLAIVERUSH);
 			gBattleScripting.tripleKickPower = 0;
 			gNewBS->ai.zMoveHelper = 0;
 			gBattleStruct->atkCancellerTracker++;
@@ -960,12 +962,38 @@ static u8 AtkCanceller_UnableToUseMove(void)
 				{
 					gMultiHitCounter = 5;
 				}
+				else if (ITEM_EFFECT(gBankAttacker) == ITEM_EFFECT_LOADED_DICE && gCurrentMove != MOVE_POPULATIONBOMB &&  gCurrentMove != MOVE_TRIPLEKICK &&  gCurrentMove != MOVE_TRIPLEAXEL)
+				{
+					gMultiHitCounter = 5;
+				}
 				#ifdef SPECIES_ASHGRENINJA
 				else if (ability == ABILITY_BATTLEBOND
 				&& gCurrentMove == MOVE_WATERSHURIKEN
 				&& SPECIES(gBankAttacker) == SPECIES_ASHGRENINJA)
 				{
 					gMultiHitCounter = 3;
+				}
+				#endif
+				#ifdef SPECIES_MAUSHOLD
+				else if (gCurrentMove == MOVE_POPULATIONBOMB
+				&& SPECIES(gBankAttacker) == SPECIES_MAUSHOLD)
+				{
+					gMultiHitCounter = Random() % 3; //Split into groups of 3
+					switch (gMultiHitCounter)
+					{
+						case 0: //33 %
+							gMultiHitCounter = 4;
+							break;
+						case 1: //33 %
+							gMultiHitCounter = 6;
+							break;
+						case 2: //33 %
+							if ((Random() & 1) == 0) //16.7 %
+								gMultiHitCounter = 8;
+							else //16.7 %
+								gMultiHitCounter = 10;
+							break;
+					}
 				}
 				else
 				#endif

@@ -539,7 +539,8 @@ bool8 CanNeverMakeContactByAbilityItemEffect(u8 ability, u8 itemEffect)
 
 bool8 CanNeverMakeContactByItemEffect(u8 itemEffect)
 {
-	return itemEffect == ITEM_EFFECT_PROTECTIVE_PADS;
+	return itemEffect == ITEM_EFFECT_PROTECTIVE_PADS
+		|| itemEffect == ITEM_EFFECT_PUNCHING_GLOVE;
 }
 
 bool8 CheckHealingMove(move_t move)
@@ -591,6 +592,7 @@ bool8 LiftProtect(u8 bank)
 	|| gProtectStructs[bank].SpikyShield
 	|| gProtectStructs[bank].BanefulBunker
 	|| gProtectStructs[bank].obstruct
+	|| gProtectStructs[bank].BurningBulwark
 	|| gSideStatuses[SIDE(bank)] & (SIDE_STATUS_CRAFTY_SHIELD | SIDE_STATUS_MAT_BLOCK | SIDE_STATUS_QUICK_GUARD | SIDE_STATUS_WIDE_GUARD))
 	{
 		if (!IsDynamaxed(bank))
@@ -600,6 +602,7 @@ bool8 LiftProtect(u8 bank)
 		gProtectStructs[bank].SpikyShield = 0;
 		gProtectStructs[bank].BanefulBunker = 0;
 		gProtectStructs[bank].obstruct = 0;
+		gProtectStructs[bank].BurningBulwark = 0;
 		gSideStatuses[SIDE(bank)] &= ~(SIDE_STATUS_CRAFTY_SHIELD | SIDE_STATUS_MAT_BLOCK | SIDE_STATUS_QUICK_GUARD | SIDE_STATUS_WIDE_GUARD);
 		return TRUE;
 	}
@@ -612,7 +615,8 @@ bool8 ProtectsAgainstZMoves(u16 move, u8 bankAtk, u8 bankDef)
 	if (gProtectStructs[bankDef].protected
 	|| gProtectStructs[bankDef].SpikyShield
 	|| gProtectStructs[bankDef].BanefulBunker
-	|| gProtectStructs[bankDef].obstruct)
+	|| gProtectStructs[bankDef].obstruct
+	|| gProtectStructs[bankDef].BurningBulwark)
 	{
 		return TRUE;
 	}
@@ -780,6 +784,10 @@ bool8 IsUnusableMove(u16 move, u8 bank, u8 check, u8 pp, u8 ability, u8 holdEffe
 		return TRUE;
 	else if (IsRaidBattle() && bank != BANK_RAID_BOSS && gSpecialMoveFlags[move].gRaidBattleBannedMoves && check & MOVE_LIMITATION_ENCORE)
 		return TRUE;
+	else if (move == MOVE_GIGATONHAMMER && gNewBS->LastUsedMove == MOVE_GIGATONHAMMER)
+        return TRUE;
+	else if (move == MOVE_BLOODMOON && gNewBS->LastUsedMove == MOVE_BLOODMOON)
+        return TRUE;
 
 	return FALSE;
 }
@@ -2615,6 +2623,11 @@ bool8 BankSideHasGMaxVolcalith(u8 bank)
 	return gNewBS->maxVolcalithTimers[SIDE(bank)] > 0;
 }
 
+bool8 BankSideHasSaltcure(u8 bank)
+{
+	return gNewBS->SaltcureTimers[SIDE(bank)] > 0;
+}
+
 bool8 IsConfused(u8 bank)
 {
 	return (gBattleMons[bank].status2 & STATUS2_CONFUSION) != 0
@@ -2689,4 +2702,8 @@ u16 TryFixDynamaxTransformSpecies(u8 bank, u16 species)
 		species = gBattleSpritesDataPtr->bankData[bank].transformSpecies;
 
 	return species;
+}
+
+bool8 IsSunWeatherActive(u8 bank) {
+    return gBattleWeather & WEATHER_SUN_ANY && WEATHER_HAS_EFFECT && AffectedBySun(bank);
 }

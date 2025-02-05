@@ -1514,6 +1514,12 @@ static void ModulateDmgByType(u8 multiplier, const u16 move, const u8 moveType, 
 		}
 	}
 
+	if (gBattleMons[bankDef].hp == gBattleMons[bankDef].maxHP && SpeciesHasTeraShell(SPECIES(bankDef))) // Check if target's HP is full
+	{
+		if (multiplier != TYPE_MUL_NO_EFFECT)
+			multiplier = TYPE_MUL_NOT_EFFECTIVE; // Override the multiplier to "not very effective"
+	}
+
 	if (!checkMonDef && multiplier == TYPE_MUL_NO_EFFECT)
 	{
 		if ((defType == TYPE_GHOST && (moveType == TYPE_NORMAL || moveType == TYPE_FIGHTING))
@@ -1818,6 +1824,7 @@ u8 GetExceptionMoveType(u8 bankAtk, u16 move)
 			break;
 
 		//Based on https://bulbapedia.bulbagarden.net/wiki/Revelation_Dance_(move)
+		case MOVE_RAGINGBULL:
 		case MOVE_REVELATIONDANCE: ;
 			u8 atkType1 = gBattleMons[bankAtk].type1;
 			u8 atkType2 = gBattleMons[bankAtk].type2;
@@ -1848,6 +1855,19 @@ u8 GetExceptionMoveType(u8 bankAtk, u16 move)
 			#ifdef SPECIES_MORPEKO_HANGRY
 			if (SPECIES(bankAtk) == SPECIES_MORPEKO_HANGRY)
 				moveType = TYPE_DARK;
+			#endif
+			break;
+		
+		case MOVE_IVYCUDGEL:
+			#if (defined SPECIES_OGERPON && SPECIES_OGERPON_WELLSPRING_MASK && SPECIES_OGERPON_HEARTHFLAME_MASK && SPECIES_OGERPON_CORNERSTONE_MASK)
+			if (SPECIES(bankAtk) == SPECIES_OGERPON_CORNERSTONE_MASK)
+				moveType = TYPE_ROCK;
+			else if (SPECIES(bankAtk) == SPECIES_OGERPON_WELLSPRING_MASK)
+				moveType = TYPE_WATER;
+			else if (SPECIES(bankAtk) == SPECIES_OGERPON_HEARTHFLAME_MASK)
+				moveType = TYPE_FIRE;
+			else
+				moveType = TYPE_GRASS;
 			#endif
 			break;
 		
@@ -1939,6 +1959,7 @@ u8 GetMonExceptionMoveType(struct Pokemon* mon, u16 move)
 				moveType = TYPE_NORMAL;
 			break;
 
+		case MOVE_RAGINGBULL:
 		case MOVE_REVELATIONDANCE:
 			moveType = GetMonType(mon, 0);
 			break;
@@ -1950,6 +1971,19 @@ u8 GetMonExceptionMoveType(struct Pokemon* mon, u16 move)
 			else
 			#endif
 				moveType = TYPE_ELECTRIC;
+			break;
+		
+		case MOVE_IVYCUDGEL:
+			#if (defined SPECIES_OGERPON && SPECIES_OGERPON_WELLSPRING_MASK && SPECIES_OGERPON_HEARTHFLAME_MASK && SPECIES_OGERPON_CORNERSTONE_MASK)
+			if (mon->species == SPECIES_OGERPON_CORNERSTONE_MASK)
+				moveType = TYPE_ROCK;
+			else if (mon->species == SPECIES_OGERPON_WELLSPRING_MASK)
+				moveType = TYPE_WATER;
+			else if (mon->species == SPECIES_OGERPON_HEARTHFLAME_MASK)
+				moveType = TYPE_FIRE;
+			else
+				moveType = TYPE_GRASS;
+			#endif
 			break;
 
 		case MOVE_TERRAINPULSE:
@@ -2647,7 +2681,21 @@ static s32 CalculateBaseDamage(struct DamageCalc* data)
 		case ABILITY_PUREPOWER:
 		#endif
 		//2x Boost
-			if (!IsScaleMonsBattle() //Too OP
+			if(SpeciesHasSupremeOverlord(data->atkSpecies))
+			{
+				int boost = 10;
+				for(int i = 0; i < gPlayerPartyCount; i++)
+				{
+					struct Pokemon mon = gPlayerParty[i];
+					if(mon.hp == 0)
+					{
+						boost++;
+					}
+				}
+				attack *= (1 + (boost / 100));
+				spAttack *= (1 + (boost / 100));
+			}
+			else if (!IsScaleMonsBattle() //Too OP
 			|| !IsSpeciesAffectedByScalemons(data->atkSpecies)) //Doesn't get the Scalemons boost
 				attack *= 2;
 			break;
@@ -2684,6 +2732,32 @@ static s32 CalculateBaseDamage(struct DamageCalc* data)
 				spAttack = (spAttack * 15) / 10;
 			break;
 
+		case ABILITY_ORICHALCUMPULSE:
+			//1.4x Boost
+			if (WEATHER_HAS_EFFECT && (gBattleWeather & WEATHER_SUN_ANY)
+			&& !ItemEffectIgnoresSunAndRain(data->atkItemEffect) && SpeciesHasOrichalcumPulse(SPECIES(bankAtk)))
+				attack = (attack * 14) / 10;
+			break;
+		
+		case ABILITY_QUARKDRIVE:
+			if (SpeciesHasProtosynthesis(SPECIES(gBankAttacker)) && (WEATHER_HAS_EFFECT && (gBattleWeather & WEATHER_SUN_ANY)
+			&& !ItemEffectIgnoresSunAndRain(data->atkItemEffect)))
+			{
+				if (SPLIT(move) == SPLIT_PHYSICAL && GetHighestStat(bankAtk) == STAT_ATK)
+					attack = (attack * 13) / 10;
+				if (SPLIT(move) == SPLIT_SPECIAL && GetHighestStat(bankAtk) == STAT_SPATK)
+					spAttack = (spAttack * 13) / 10;
+			}
+
+			else if (gTerrainType == ELECTRIC_TERRAIN && IsAffectedByElectricTerrain(gBankAttacker))
+			{
+				if (SPLIT(move) == SPLIT_PHYSICAL && GetHighestStat(bankAtk) == STAT_ATK)
+					attack = (attack * 13) / 10;
+				if (SPLIT(move) == SPLIT_SPECIAL && GetHighestStat(bankAtk) == STAT_SPATK)
+					spAttack = (spAttack * 13) / 10;
+			}
+			break;
+
 		case ABILITY_SLOWSTART:
 		//0.5x Boost
 			if (useMonAtk)
@@ -2699,6 +2773,12 @@ static s32 CalculateBaseDamage(struct DamageCalc* data)
 				attack /= 2;
 				spAttack /= 2;
 			}
+			break;
+
+		case ABILITY_HADRONENGINE:
+			//1.33x Boost
+			if (gTerrainType == ELECTRIC_TERRAIN && SpeciesHasHadronEngine(SPECIES(bankAtk)) && data->atkIsGrounded)
+				spAttack = (spAttack * 133) / 100;
 			break;
 
 		case ABILITY_FLASHFIRE:
@@ -2794,6 +2874,25 @@ static s32 CalculateBaseDamage(struct DamageCalc* data)
 				spAttack = (spAttack * 75) / 100;
 			}
 		#endif
+			break;
+
+		case ABILITY_QUARKDRIVE:
+			if (SpeciesHasProtosynthesis(SPECIES(gBankTarget)) && (WEATHER_HAS_EFFECT && (gBattleWeather & WEATHER_SUN_ANY)
+			&& !ItemEffectIgnoresSunAndRain(data->atkItemEffect)))
+			{
+				if (SPLIT(move) == SPLIT_PHYSICAL && GetHighestStat(bankDef) == STAT_DEF)
+					defense = (defense * 13) / 10;
+				if (SPLIT(move) == SPLIT_SPECIAL && GetHighestStat(bankDef) == STAT_SPDEF)
+					spDefense = (spDefense * 13) / 10;
+			}
+
+			else if (gTerrainType == ELECTRIC_TERRAIN && IsAffectedByElectricTerrain(gBankTarget))
+			{
+				if (SPLIT(move) == SPLIT_PHYSICAL && GetHighestStat(bankDef) == STAT_DEF)
+					defense = (defense * 13) / 10;
+				if (SPLIT(move) == SPLIT_SPECIAL && GetHighestStat(bankDef) == STAT_SPDEF)
+					spDefense = (spDefense * 13) / 10;
+			}
 			break;
 	}
 
@@ -2931,6 +3030,61 @@ static s32 CalculateBaseDamage(struct DamageCalc* data)
 			spDefense = (15 * spDefense) / 10; //Ground types get a Sp. Def boost in a "Vicious Sandstorm"
 	}
 
+//Hail Def Increase
+    if (WEATHER_HAS_EFFECT && (gBattleWeather & WEATHER_HAIL_ANY)
+        && ((!useMonDef && IsOfType(bankDef, TYPE_ICE)) || (useMonDef && IsMonOfType(data->monDef, TYPE_ICE)))){
+        defense = (defense * 15) / 10;
+	}
+
+	bool8 stallInField = FALSE;
+	bool8 beadsOfRuinInField = FALSE;
+	bool8 TabletsOfRuinInField = FALSE;
+	bool8 VesselOfRuinInField = FALSE;
+	bool8 SwordOfRuinInField = FALSE;
+	u8 stallSide = 0xFF;  // Stores the side of the field where ABILITY_STALL was found
+
+	// Check if any Pokémon on the field has ABILITY_STALL
+	for (u8 bank = 0; bank < gBattlersCount; ++bank) {
+		if (GetBankAbility(bank) == ABILITY_STALL) {
+			stallInField = TRUE;
+			stallSide = GetBattlerSide(bank); // Store the side of the field of the Pokémon with Stall
+		}
+		
+		if (SpeciesHasBeadsofRuin(SPECIES(bank)) && GetBattlerSide(bank) == stallSide) {
+			beadsOfRuinInField = TRUE;
+		}
+		if (SpeciesHasTabletsofRuin(SPECIES(bank)) && GetBattlerSide(bank) == stallSide) {
+			TabletsOfRuinInField = TRUE;
+		}
+		if (SpeciesHasVesselofRuin(SPECIES(bank)) && GetBattlerSide(bank) == stallSide) {
+			VesselOfRuinInField = TRUE;
+		}
+		if (SpeciesHasSwordofRuin(SPECIES(bank)) && GetBattlerSide(bank) == stallSide) {
+			SwordOfRuinInField = TRUE;
+		}
+
+		// If both are true and on the same side, no need to continue the loop
+		if (stallInField && (beadsOfRuinInField || TabletsOfRuinInField || VesselOfRuinInField || SwordOfRuinInField)) {
+			break;
+		}
+	}
+
+	if (stallInField && beadsOfRuinInField && !SpeciesHasBeadsofRuin(SPECIES(bankAtk))) {
+		spDefense = (spDefense * 75) / 100;  // Reduce Sp defense by 25%
+	}
+
+	if (stallInField && TabletsOfRuinInField && !SpeciesHasTabletsofRuin(SPECIES(bankAtk))) {
+		attack = (attack * 75) / 100;  // Reduce attack by 25%
+	}
+
+	if (stallInField && VesselOfRuinInField && !SpeciesHasVesselofRuin(SPECIES(bankAtk))) {
+		spAttack = (spAttack * 75) / 100;  // Reduce Sp attack by 25%
+	}
+
+	if (stallInField && SwordOfRuinInField && !SpeciesHasSwordofRuin(SPECIES(bankAtk))) {
+		defense = (defense * 75) / 100;  // Reduce defense by 25%
+	}
+
 //Old Exploding Check
 	#ifdef OLD_EXPLOSION_BOOST
 		if (move == MOVE_SELFDESTRUCT || move == MOVE_EXPLOSION)
@@ -3063,6 +3217,14 @@ static s32 CalculateBaseDamage(struct DamageCalc* data)
 	if (!(data->specialFlags & FLAG_AI_CALC) && gProtectStructs[bankAtk].helpingHand)
 		damage = (damage * 15) / 10;
 
+	//Glaive Rush Panalty
+	if (data->defStatus3 & STATUS3_GLAIVERUSH)
+		damage *= 2;
+
+	//Punching Glove Boost
+	if (ITEM_EFFECT(gBankAttacker) == ITEM_EFFECT_PUNCHING_GLOVE && gSpecialMoveFlags[move].gPunchingMoves)
+		damage = (damage * 11) / 10;
+
 	//Weather Boost
 	if (WEATHER_HAS_EFFECT && !ItemEffectIgnoresSunAndRain(data->defItemEffect))
 	{
@@ -3084,6 +3246,9 @@ static s32 CalculateBaseDamage(struct DamageCalc* data)
 					damage = (damage * 15) / 10;
 					break;
 				case TYPE_WATER:
+					if (gCurrentMove == MOVE_HYDROSTEAM)
+						damage = (damage * 15) / 10;
+					else
 					damage /= 2;
 					break;
 			}
@@ -3163,6 +3328,12 @@ static s32 CalculateBaseDamage(struct DamageCalc* data)
 
 			if ((useMonAtk && CheckContactByMon(move, data->monAtk))
 			|| (!useMonAtk && CheckContact(move, bankAtk, bankDef)))
+				damage /= 2;
+			break;
+
+		case ABILITY_IMMUNITY:
+		//0.5x Decrement
+			if (data->moveType == TYPE_GHOST && SpeciesHasPurifyingSalt(SPECIES(bankDef)))
 				damage /= 2;
 			break;
 
@@ -3317,6 +3488,11 @@ static u16 GetBasePower(struct DamageCalc* data)
 				power *= 2;
 			break;
 
+		case MOVE_FICKLEBEAM:
+			if (Random() % 100 < 30)
+				power *=2;
+			break;
+
 		case MOVE_BRINE:
 			if (!(data->specialFlags & FLAG_IGNORE_TARGET)
 			&& data->defHP < data->defMaxHP / 2)
@@ -3389,6 +3565,13 @@ static u16 GetBasePower(struct DamageCalc* data)
 				power *= 2;
 			break;
 
+		case MOVE_COLLISIONCOURSE:
+		case MOVE_ELECTRODRIFT:
+			if (!(data->specialFlags & FLAG_IGNORE_TARGET)
+			&& data->resultFlags & MOVE_RESULT_SUPER_EFFECTIVE)
+				power *= 15 / 10;
+			break;
+
 		case MOVE_PAYBACK:
 			if (!(data->specialFlags & (FLAG_IGNORE_TARGET | FLAG_CHECKING_FROM_MENU))
 			&& !useMonAtk
@@ -3400,6 +3583,37 @@ static u16 GetBasePower(struct DamageCalc* data)
 		case MOVE_RETALIATE:
 			if (gNewBS->RetaliateCounters[SIDE(bankAtk)]) //Bank should be accurate for party too
 				power *= 2;
+			break;
+
+		case MOVE_LASTRESPECTS:
+		if (!(data->specialFlags & FLAG_IGNORE_TARGET))
+		{
+			int boost = 50;
+			for(int i = 0; i < gPlayerPartyCount; i++)
+				{
+					struct Pokemon mon = gPlayerParty[i];
+					if(mon.hp == 0)
+					{
+						boost++;
+					}
+				}
+				power = boost;
+		}
+			break;
+
+		case MOVE_PSYBLADE:
+			if (gTerrainType == ELECTRIC_TERRAIN)
+				power = (power * 15) / 10; //Boosts 1.5x in Electric Terrain
+			break;
+
+		case MOVE_TEMPERFLARE:
+			if (gNewBS->activateTemperFlare) //Bank should be accurate for party too
+				power *= 2;
+			break;
+
+		case MOVE_RAGEFIST:
+			if (gNewBS->rageFistCounter[SIDE(bankAtk)])
+				power = 50 * (gNewBS->rageFistCounter[SIDE(bankAtk)]);
 			break;
 
 		case MOVE_ROUND:
@@ -3614,6 +3828,11 @@ static u16 GetBasePower(struct DamageCalc* data)
 		case MOVE_WRINGOUT:
 			if (!(data->specialFlags & FLAG_IGNORE_TARGET))
 				power = MathMax(1, (data->defHP * 120) / data->defMaxHP);
+			break;
+
+		case MOVE_HARDPRESS:
+			if (!(data->specialFlags & FLAG_IGNORE_TARGET))
+				power = MathMax(1, (data->defHP * 100) / data->defMaxHP);
 			break;
 
 		case MOVE_TRUMPCARD: ;
@@ -3956,7 +4175,9 @@ static u16 AdjustBasePower(struct DamageCalc* data, u16 power)
 
 		case ABILITY_STRONGJAW:
 		//1.5x Boost
-			if (gSpecialMoveFlags[move].gBitingMoves)
+			if (gSpecialMoveFlags[move].gSlicingMoves && SpeciesHasSharpness(SPECIES(bankAtk)))
+				power = (power * 15) / 10;
+			else if (gSpecialMoveFlags[move].gBitingMoves)
 				power = (power * 15) / 10;
 			break;
 
@@ -3983,7 +4204,9 @@ static u16 AdjustBasePower(struct DamageCalc* data, u16 power)
 		case ABILITY_STEELWORKER:
 		case ABILITY_STEELYSPIRIT:
 		//1.5x Boost
-			if (data->moveType == TYPE_STEEL)
+			if (SpeciesHasRockyPayload(SPECIES(bankAtk)) && data->moveType == TYPE_ROCK)
+				power = (power * 15) / 10;
+			else if (data->moveType == TYPE_STEEL)
 				power = (power * 15) / 10;
 			break;
 

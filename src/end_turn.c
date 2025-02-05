@@ -143,7 +143,7 @@ const u16 gSandstormHailDmgStringIds[] =
 	STRINGID_CUSTOMSTRING,
 };
 
-u8 TurnBasedEffects(void)
+u8 TurnBasedEffects(u16 move, u8 bank, struct Pokemon* monAtk)
 {
 	int i, j;
 	u8 effect = 0;
@@ -183,6 +183,9 @@ u8 TurnBasedEffects(void)
 
 					if(gNewBS->StompingTantrumTimers[i])
 						--gNewBS->StompingTantrumTimers[i];
+
+					if(gNewBS->GlaiveRushTimers[i])
+						--gNewBS->GlaiveRushTimers[i];
 
 					if (gNewBS->StakeoutCounters[i])
 						--gNewBS->StakeoutCounters[i];
@@ -226,6 +229,14 @@ u8 TurnBasedEffects(void)
 
 				if (gNewBS->EchoedVoiceCounter == 0)
 					gNewBS->EchoedVoiceDamageScale = 0;
+
+				if (gNewBS->activateTemperFlare)
+					--gNewBS->activateTemperFlare;
+
+				if (GetMonMoveTypeSpecial(monAtk, move) == TYPE_ELECTRIC)
+				{
+					gNewBS->ElectroCounter[bank] = 0;
+				}
 
 				gSideStatuses[B_SIDE_PLAYER] &= ~(SIDE_STATUS_CRAFTY_SHIELD | SIDE_STATUS_MAT_BLOCK | SIDE_STATUS_QUICK_GUARD | SIDE_STATUS_WIDE_GUARD);
 				gSideStatuses[B_SIDE_OPPONENT] &= ~(SIDE_STATUS_CRAFTY_SHIELD | SIDE_STATUS_MAT_BLOCK | SIDE_STATUS_QUICK_GUARD | SIDE_STATUS_WIDE_GUARD);
@@ -770,6 +781,7 @@ u8 TurnBasedEffects(void)
 					gBattleMons[gActiveBattler].status2 &= ~(STATUS2_WRAPPED);
 					gNewBS->brokeFreeMessage &= ~(gBitTable[gActiveBattler]);
 					gNewBS->sandblastCentiferno[gActiveBattler] = 0;
+					gNewBS->SaltcureTimers[gActiveBattler] = 0;
 
 					gBattleTextBuff1[0] = B_BUFF_PLACEHOLDER_BEGIN;
 					gBattleTextBuff1[1] = B_TXT_COPY_VAR_1;
@@ -1926,7 +1938,9 @@ u32 GetTrapDamage(u8 bank)
 	&& !(gNewBS->brokeFreeMessage & gBitTable[bank]) //Trapping isn't about to end
 	&& ABILITY(bank) != ABILITY_MAGICGUARD)
 	{
-		if ((gNewBS->sandblastCentiferno[gActiveBattler] & 2) //Trapped by this move and user held Binding Band
+		if (gNewBS->SaltcureTimers[gActiveBattler] && (IsOfType(bank, TYPE_WATER) || IsOfType(bank, TYPE_STEEL)))
+			damage = MathMax(1, GetBaseMaxHP(bank) / 4);
+		else if ((gNewBS->sandblastCentiferno[gActiveBattler] & 2) //Trapped by this move and user held Binding Band
 		|| ITEM_EFFECT(gBattleStruct->wrappedBy[bank]) == ITEM_EFFECT_BINDING_BAND)
 			damage = MathMax(1, GetBaseMaxHP(bank) / 6);
 		else
@@ -2071,6 +2085,24 @@ u32 GetGMaxVolcalithDamage(u8 bank)
 	&& ABILITY(bank) != ABILITY_MAGICGUARD)
 	{
 		damage = MathMax(1, GetBaseMaxHP(bank) / 6);
+	}
+
+	return damage;
+}
+
+u32 GetSaltCureDamage(u8 bank)
+{
+	u32 damage = 0;
+
+	if (gBattleMons[bank].status2 & STATUS2_WRAPPED
+	&& !(gNewBS->brokeFreeMessage & gBitTable[bank]) //Trapping isn't about to end
+	&& ABILITY(bank) != ABILITY_MAGICGUARD)
+	{
+		if (IsOfType(bank, TYPE_WATER)
+		||  IsOfType(bank, TYPE_STEEL))
+			damage = MathMax(1, GetBaseMaxHP(bank) / 4);
+		else
+			damage = MathMax(1, GetBaseMaxHP(bank) / 8);
 	}
 
 	return damage;

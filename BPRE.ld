@@ -37,6 +37,8 @@ sPlayTimeCounterState = 0x3000E7C;
 sRtc = 0x3005E88;
 gClock = 0x3005EA0;
 sRTCFrameCount = 0x3005EA9;
+sPlayTimeCounterState = 0x3000E7C;
+gLastClockSecond = 0x300539C;
 
 /* Party RAM */
 gMultiPartnerParty = 0x2022B58;
@@ -327,6 +329,7 @@ sStartMenuOrder = 0x20370F6;
 sDrawStartMenuState = 0x20370FF;
 sSafariZoneStatsWindowId = 0x2037101;
 sStartMenuWindowId = 0x203ABE0;
+sTimeWindowId = 0x2037101;
 
 /* Trade RAM */
 gSelectedTradeMonPositions = 0x2031DA4;
@@ -794,6 +797,7 @@ uns_builder_assign_animtable1 = 0x810BD80 | 1;
 //AI_TrySwitchOrUseItem = 0x8039C84 | 1;
 //BattleAI_SetupAIData = 0x80C6DA0 | 1;
 //RecordLastUsedMoveByTarget = 0x80C7164 | 1;
+
 
 /* Secret Base Functions */
 GetSecretBaseTrainerPicIndex = 0x8040EEC | 1;
@@ -1483,11 +1487,11 @@ CreatePartyMonSprites = 0x811F634 | 1;
 AnimatePartySlot = 0x811F818 | 1;
 Task_ClosePartyMenu = 0x811FA78 | 1;
 GetCursorSelectionMonId = 0x811FB0C | 1;
-Task_HandleChooseMonInput = 0x811FB28 | 1;
+/* Task_HandleChooseMonInput = 0x811FB28 | 1;*/
 GetCurrentPartySlotPtr = 0x811FBA4 | 1;
 HandleChooseMonSelection = 0x811FBC4 | 1;
 HandleChooseMonCancel = 0x811FD88 | 1;
-PartyMenuButtonHandler = 0x811FEFC | 1;
+/* PartyMenuButtonHandler = 0x811FEFC | 1;*/
 GetMedicineItemEffectMessage = 0x8125058 | 1;
 GetNewSlotDoubleLayout = 0x812029C | 1;
 DisplayPartyMenuMessage = 0x81202F8 | 1;
@@ -1625,7 +1629,7 @@ Menu_PrintFormatIntlPlayerName = 0x812E6DC | 1;
 /* PicBox Functions */
 Task_PokemonPicWindow = 0x809D288 | 1;
 TaskDestroyPicBox = 0x809D494 | 1;
-CreateWindowFromRect = 0x809D654 | 1;
+//CreateWindowFromRect = 0x809D654 | 1;
 PicBoxSetter = 0x809D6D4 | 1;
 BoxCreateTask = 0x81119D4 | 1;
 
@@ -1996,6 +2000,7 @@ Task_HofPC_HandleInput = 0x80F2E8C | 1;
 Task_HofPC_PrintDataIsCorrupted = 0x80F30A4 | 1;
 SpriteCB_GetOnScreenAndAnimate = 0x80F3870 | 1;
 AddTextPrinterParameterized2 = 0x80F6CD0 | 1;
+AddTextPrinterParameterized3 = 0x812E51C | 1;
 NewMenuHelpers_DrawDialogueFrame = 0x80F6EE4 | 1;
 GetFontAttribute = 0x80F79D8 | 1;
 dp13_810BB8C = 0x810BB8C | 1;
@@ -2018,6 +2023,8 @@ CreateTrainerCardTrainerPicSprite = 0x810C330 | 1;
 SetTitleScreenScene = 0x8078C90 | 1;
 Task_TitleScreen_SlideWin0 = 0x80792C8 | 1;
 TitleScreen_CreateBlankSprite = 0x80799F0 | 1;
+
+
 
 /* Playtime Functions */
 PlayTimeCounter_SetToMax = 0x80548D4 | 1;
@@ -2067,3 +2074,81 @@ DMA0_SRC = 0x40000B0;
 DMA0_DST = 0x40000B4;
 DMA0_CNT_L = 0x40000B8;
 DMA0_CNT_H = 0x40000BA;
+
+/* TM Case Redesign */
+spriteIdData = 0x2039934;
+spriteIdPalette = 0x203993A ;
+
+SetMonIconTransparency = 0x808cfc4 | 1;
+gText_TMCase = 0x84166d3;
+SetPartyHPBarSprite = 0x8097414 | 1;
+Task_PrintMainMenuText = 0x800c7a0 | 1;
+
+/* EV-IV */
+CB2_ReturnToFieldFromDiploma = 0x80568FC | 1;
+DecompressAndCopyTileDataToVram = 0x80F6878 | 1;
+FreeTempTileDataBuffersIfPossible = 0x80F682C | 1;
+stdpal_get = 0x8150408 | 1;
+PlayCry7 = 0x8071F24 | 1;
+CreateMonSprite_FieldMove = 0x80839D4 | 1;
+FreeResourcesAndDestroySprite = 0x8083A5C | 1;
+gEvIv = 0x0203FFF0;
+QuestLog_CutRecording = 0x8112364 | 1;
+sBrailleWindowId = 0x203FFD0;
+SetUpWarpExitTask = 0x807DE78 | 1;
+FieldCB_WarpExitFadeFromBlack = 0x807DF7C | 1;
+ScriptFreezeObjectEvents = 0x80695B4 | 1;
+DestroyMonIconInternal = 0x80973D8 | 1;
+CreateMonIconSprite = 0x8097300 | 1;
+ScriptContext2_RunScript = 0x8069AA8 | 1;
+OverworldBasic = 0x8056578 | 1;
+sub_8056CD8 = 0x8056CD8 | 1;
+ReloadObjectsAndRunReturnToFieldMapScript = 0x8057100 | 1;
+InitOverworldBgs = 0x80562B0 | 1;
+QuestLog_InitPalettesBackup = 0x8111F14 | 1;
+ResumeMap = 0x8057024 | 1;
+sub_8057114 = 0x8057114 | 1;
+sub_8056F08 = 0x8056F08 | 1;
+SetHelpContextForMap = 0x812B35C | 1;
+map_post_load_hook_exec = 0x80565EC | 1;
+CloseBagWindow = 0x810BA9C | 1;
+InitFieldMessageBox = 0x8069348 | 1;
+ClearPlayerHeldMovementAndUnfreezeObjectEvents = 0x80696C0 | 1;
+PlayerForceSetHeldMovement = 0x805BFFC | 1;
+CameraUpdate = 0x805ABB0 | 1;
+sub_8115798 = 0x8115798 | 1;
+UpdateCameraPanning = 0x805AE28 | 1;
+UpdateTilesetAnimations = 0x806FFBC | 1;
+QuestLog_SchedulePlaybackCB = 0x81119D4 | 1;
+QLPlaybackCB_DestroyScriptMenuMonPicSprites = 0x809d6d4 |1;
+Overworld_CreditsMainCB = 0x80574A4 | 1;
+LoadStdWindowFrameGfx = 0x80f6E9C | 1;
+InitOverworldBgs_NoResetHeap = 0x8056354 | 1;
+GetReflectionTypeByMetatileBehavior = 0x80680C8 | 1;
+IsPlayerPartyAndPokemonStorageFull = 0x8040F6C | 1;
+
+/* EV-IV 2 */
+AddTextPrinterParameterized3 = 0x812E51C | 1;
+sGenderColors = 0x83E2428;
+gText_MaleSymbol = 0x841621F;
+gText_FemaleSymbol = 0x8416221;
+gText_TMCase = 0x84166d3;
+
+/* Select button to switch pkmn*/
+
+MoveCursorToConfirm = 0x08124258|1;
+GetCurrentPartySlotPtr = 0x0811fba4|1;
+sub_80BF748 = 0x080bf748|1;
+HandleChooseMonSelection = 0x0811fbc4|1;
+CursorCB_Switch = 0x08122e00|1;
+HandleChooseMonCancel = 0x811fd88|1;
+CalculatePlayerPartyCount = 0x08040c3c|1;
+UpdateCurrentPartySelection = 0x0811ff94|1; 
+
+/* Mining Funcs */
+
+AddTextPrinterParameterized3 = 0x812e51c | 1;
+gOamData_AffineOff_ObjNormal_32x32 = 0x83ac9d8;
+gOamData_AffineOff_ObjNormal_64x64 = 0x83ac9e0;
+gOamData_AffineOff_ObjNormal_64x32 = 0x83aca00;
+gOamData_AffineOff_ObjNormal_32x64 = 0x83aca20;

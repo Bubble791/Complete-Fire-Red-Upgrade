@@ -1256,6 +1256,7 @@ void ClearSwitchBytes(u8 bank)
 	gNewBS->HealBlockTimers[bank] = 0;
 	gNewBS->LaserFocusTimers[bank] = 0;
 	gNewBS->ThroatChopTimers[bank] = 0;
+	gNewBS->GlaiveRushTimers[bank] = 0;
 	gNewBS->StompingTantrumTimers[bank] = 0;
 	gNewBS->MetronomeCounter[bank] = 0;
 	gNewBS->DestinyBondCounters[bank] = 0;
@@ -1273,6 +1274,7 @@ void ClearSwitchBytes(u8 bank)
 	gNewBS->zMoveData.toBeUsed[bank] = 0; //Force switch or fainted before Z-Move could be used
 	gNewBS->chiStrikeCritBoosts[bank] = 0;
 	gNewBS->sandblastCentiferno[bank] = 0;
+	gNewBS->SaltcureTimers[bank] = 0;
 	gNewBS->disguisedAs[bank] = 0;
 	gNewBS->powerShifted[bank] = 0;
 	gNewBS->splinterTimer[bank] = 0;
@@ -1280,12 +1282,15 @@ void ClearSwitchBytes(u8 bank)
 	gNewBS->splinterAttackerMonId[bank] = 0;
 	gNewBS->splinterMove[bank] = 0;
 	gNewBS->tookAbilityFrom[bank] = 0;
+	gNewBS->quarkDriveActivated[bank] = FALSE;
+	gNewBS->ProtosynthesisActivated[bank] = FALSE;
 
 	gProtectStructs[bank].KingsShield = 0;	//Necessary because could be sent away with Roar
 	gProtectStructs[bank].SpikyShield = 0;
 	gProtectStructs[bank].BanefulBunker = 0;
 	gProtectStructs[bank].obstruct = 0;
 	gProtectStructs[bank].enduredSturdy = 0;
+	gProtectStructs[bank].BurningBulwark = 0;
 	
 	DestroyMegaIndicator(bank);
 	WipeOldDeperateAttemptRecord(bank);

@@ -267,11 +267,11 @@ u8 TMIdFromItemId(u16 itemId)
 	if (itemId == ITEM_NONE)
 		return 255; //So blank items get put at the end
 	else if (tmNum == 0)
-		return itemId - ITEM_TM01_FOCUS_PUNCH;
+		return itemId - ITEM_TM01;
 	else
 		return tmNum-1;
 	#else
-		return itemId - ITEM_TM01_FOCUS_PUNCH;
+		return itemId - ITEM_TM01;
 	#endif
 }
 
@@ -783,7 +783,7 @@ u8 CheckDiscIsTmHm(struct Sprite* disc, u16 itemId)
 	else
 		StartSpriteAnim(disc, 0);
 	#else
-	if (itemId <= ITEM_TM50_OVERHEAT)
+	if (itemId <= ITEM_TM50)
 		StartSpriteAnim(disc, 0);
 	else
 		StartSpriteAnim(disc, 1);
@@ -815,7 +815,7 @@ bool8 CheckReusableTMs(u16 item)
 		else
 			return FALSE;
 	#else
-		if (item > ITEM_TM50_OVERHEAT)
+		if (item > ITEM_TM50)
 			return TRUE;
 		else
 			return FALSE;
@@ -1159,8 +1159,6 @@ void HandleItemRegistration(u16 item)
 }
 
 //Bag Expansion////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define gBagPockets ((struct BagPockets*) 0x203988C)
-
 #define sBagRegularItems ((struct ItemSlot*) 0x203BB20)
 #define sBagKeyItems (sBagRegularItems + NUM_REGULAR_ITEMS)
 #define sBagPokeBalls (sBagKeyItems + NUM_KEY_ITEMS)
@@ -1191,20 +1189,6 @@ struct BagSlots
 	u16 cursorPos[3];
 	u16 registeredItems[NELEMS(gSaveBlock1->registeredItems)];
 	u16 pocket;
-};
-
-struct BagPockets
-{
-	struct ItemSlot* itemRam;
-	u32 itemAmount;
-	struct ItemSlot* keyItemRam;
-	u32 keyItemAmount;
-	struct ItemSlot* pokeBallRam;
-	u32 pokeBallAmount;
-	struct ItemSlot* tmRam;
-	u32 tmAmount;
-	struct ItemSlot* berryRam;
-	u32 berryAmount;
 };
 
 static const struct BagPockets sBagPocketArrangement =

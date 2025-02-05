@@ -1120,3 +1120,17 @@ waitbgfadein
 .equ ANIM_TAG_HOOPA_RING_LARGE, 0x2880
 .equ ANIM_TAG_OMEGA_SYMBOL, 0x2881
 .equ ANIM_TAG_ALPHA_SYMBOL, 0x2882
+
+//New Anim
+.equ Template_ElectricStatic, 0x83E6204
+.equ SparksSound, 0x70
+.equ ThunderSound, 0xD6
+.equ Template_ElectricSparkPlayer2, 0x83E6070   @Temp271B_A
+.equ Template_SpotlightTarget, 0x83FF3A0
+.equ AnimTask_FadeWhiteOrBlack, 0x80BAB39
+.equ AnimTask_PlayUserCry, 0x80DD333    @PlayUserCry
+.equ Template_Sparkle, 0x83E6EA4 
+.equ Template_Temp27AB_G, 0x83E5B70
+.equ AnimTask_GetWeather, 0x80E44EB
+.equ Template_GraySmoke, 0x83E36A8
+.equ CoinSound, 0xA7

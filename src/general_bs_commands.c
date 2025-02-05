@@ -448,7 +448,7 @@ void atk09_attackanimation(void)
 	if (((gHitMarker & HITMARKER_NO_ANIMATIONS)
 	 && (move != MOVE_TRANSFORM && move != MOVE_SUBSTITUTE
 	  && move != MOVE_ELECTRICTERRAIN && move != MOVE_PSYCHICTERRAIN
-	  && move != MOVE_MISTYTERRAIN && move != MOVE_GRASSYTERRAIN)) //Terrain animations always need to play and reload BG
+	  && move != MOVE_MISTYTERRAIN && move != MOVE_GRASSYTERRAIN && move != MOVE_SHEDTAIL)) //Terrain animations always need to play and reload BG
 	|| gNewBS->tempIgnoreAnimations)
 	{
 		if (!(resultFlags & MOVE_RESULT_NO_EFFECT))
@@ -2336,6 +2336,8 @@ void atk77_setprotect(void)
 		case MOVE_WIDEGUARD:
 		case MOVE_OBSTRUCT:
 		case MOVE_MAX_GUARD:
+		case MOVE_SILKTRAP:
+		case MOVE_BURNINGBULWARK:
 			break;
 		default:
 			gDisableStructs[gBankAttacker].protectUses = 0;
@@ -2406,6 +2408,16 @@ void atk77_setprotect(void)
 			case MOVE_ENDURE:
 				gProtectStructs[gBankAttacker].endured = 1;
 				gBattleCommunication[MULTISTRING_CHOOSER] = 1;
+				break;
+			
+			case MOVE_SILKTRAP:
+				gProtectStructs[gBankAttacker].SilkTrap = 1;
+				gBattleCommunication[MULTISTRING_CHOOSER] = 0;
+				break;
+
+			case MOVE_BURNINGBULWARK:
+				gProtectStructs[gBankAttacker].BurningBulwark = 1;
+				gBattleCommunication[MULTISTRING_CHOOSER] = 0;
 				break;
 
 			default:
@@ -4536,6 +4548,7 @@ void atkBE_rapidspinfree(void)
 			gBattleMons[bankAtk].status2 &= ~(STATUS2_WRAPPED);
 			gNewBS->brokeFreeMessage &= ~(gBitTable[bankAtk]);
 			gNewBS->sandblastCentiferno[bankAtk] = 0;
+			gNewBS->SaltcureTimers[bankAtk] = 0;
 			gBankTarget = gBattleStruct->wrappedBy[bankAtk];
 
 			PREPARE_MOVE_BUFFER(gBattleTextBuff1, gBattleStruct->wrappedMove[bankAtk]);
@@ -5614,4 +5627,22 @@ void atkEE_removelightscreenreflect(void) { //Brick Break
 		gBattleScripting.animTargetsHit = 0;
 	}
 	gBattlescriptCurrInstr++;
+}
+
+void setsubstituteonattacker(void)
+{
+    u32 hp;
+    hp = 1;
+    hp = gBattleMons[gBankSwitching].maxHP / 4;
+    if (gBattleMons[gBankSwitching].maxHP / 4 == 0)
+        hp = 1;
+
+    gBattleMoveDamage = hp; 
+    if (gBattleMoveDamage == 0)
+        gBattleMoveDamage = 1;
+
+    gBattleMons[gBankSwitching].status2 |= STATUS2_SUBSTITUTE;
+    gBattleMons[gBankSwitching].status2 &= ~STATUS2_WRAPPED;
+    gDisableStructs[gBankSwitching].substituteHP = gBattleMoveDamage;
+    gBattleSpritesDataPtr->bankData[gBankSwitching].behindSubstitute = 1;
 }

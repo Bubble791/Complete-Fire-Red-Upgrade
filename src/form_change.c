@@ -109,6 +109,7 @@ void SwitchOutFormsRevert(u8 bank)
 {
 	struct Pokemon* mon = GetBankPartyData(bank);
 	u16 backupSpecies = mon->backupSpecies;
+	u8 ability = GetMonAbility(mon);
 
 	if (IS_TRANSFORMED(bank))
 		return;
@@ -193,6 +194,16 @@ void SwitchOutFormsRevert(u8 bank)
 				DoFormChange(bank, SPECIES_CRAMORANT, FALSE, TRUE, FALSE);
 			break;
 		#endif
+
+		#if (defined SPECIES_PALAFIN && defined SPECIES_PALAFIN_HERO)
+		case SPECIES_PALAFIN:
+			if (backupSpecies != SPECIES_NONE && ability == ABILITY_TORRENT)
+				DoFormChange(bank, backupSpecies, FALSE, TRUE, FALSE);
+			else
+				DoFormChange(bank, SPECIES_PALAFIN_HERO, FALSE, TRUE, FALSE);
+			break;
+		#endif
+
 	}
 }
 

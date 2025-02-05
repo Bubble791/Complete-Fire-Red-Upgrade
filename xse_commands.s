@@ -1968,3 +1968,11 @@ map \map
 .hword \var, \val
 .word \script
 .endm
+
+.macro msgminibox text:req pointer:req type:req
+	loadpointer 0x0 \text
+    callasm MiniBoxOpen
+	loadpointer 0x0 \pointer
+	callstd \type
+	callasm ClearMiniBox
+.endm

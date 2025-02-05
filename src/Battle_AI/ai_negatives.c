@@ -215,7 +215,8 @@ u8 AIScript_Negatives(const u8 bankAtk, const u8 bankDef, const u16 originalMove
 			case ABILITY_VOLTABSORB:
 			case ABILITY_MOTORDRIVE:
 			case ABILITY_LIGHTNINGROD:
-				if (moveType == TYPE_ELECTRIC) // && (moveSplit != SPLIT_STATUS))
+				if ((moveType == TYPE_ELECTRIC && !SpeciesHasEarthEater(SPECIES(gBankTarget)))
+				|| (moveType == TYPE_GROUND && SpeciesHasEarthEater(SPECIES(gBankTarget))))		 // && (moveSplit != SPLIT_STATUS))
 				{
 					if (!TARGETING_PARTNER) //Good idea to attack partner
 					{
@@ -330,6 +331,14 @@ u8 AIScript_Negatives(const u8 bankAtk, const u8 bankDef, const u16 originalMove
 
 			case ABILITY_BULLETPROOF:
 				if (specialMoveFlags->gBallBombMoves)
+				{
+					DECREASE_VIABILITY(10);
+					return viability;
+				}
+				break;
+				
+			case ABILITY_ANGERPOINT:
+				if (specialMoveFlags->gWindMoves && SpeciesHasWindRider(SPECIES(bankDef)))
 				{
 					DECREASE_VIABILITY(10);
 					return viability;
@@ -596,6 +605,16 @@ u8 AIScript_Negatives(const u8 bankAtk, const u8 bankDef, const u16 originalMove
 						}
 						break;
 				}
+			}
+
+			if (ITEM_EFFECT(bankDef) == ITEM_EFFECT_CLEAR_AMULET)
+			{
+				if (CheckTableForMovesEffect(move, gStatLoweringMoveEffects)
+					|| move == MOVE_PARTINGSHOT)
+					{
+						DECREASE_VIABILITY(10);
+						return viability;
+					}
 			}
 		}
 	}
@@ -1378,6 +1397,7 @@ SKIP_CHECK_TARGET:
 			||  GetNightmareDamage(bankDef) > 0
 			||  GetCurseDamage(bankDef) > 0
 			||  GetTrapDamage(bankDef) > 0
+			||	GetSaltCureDamage(bankDef) > 0
 			||  GetPoisonDamage(bankDef, TRUE) >= gBattleMons[bankDef].maxHP / 4) //Or is taking Bad secondary damage.
 			{
 				DECREASE_VIABILITY(10);
@@ -3210,6 +3230,8 @@ SKIP_CHECK_TARGET:
 		case EFFECT_LAST_RESORT:
 			if (!CanUseLastResort(bankAtk))
 				DECREASE_VIABILITY(10);
+			else if (gLastUsedMoves[bankAtk] == MOVE_GIGATONHAMMER || gLastUsedMoves[bankAtk] == MOVE_BLOODMOON)
+                DECREASE_VIABILITY(10);
 			else
 				goto AI_STANDARD_DAMAGE;
 			break;

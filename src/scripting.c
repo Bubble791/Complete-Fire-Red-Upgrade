@@ -70,11 +70,18 @@ tables to edit:
 
 #define POKERUS_CURED 0x10
 
+/* Ignore Wild Pokemon*/
+#define gMonPaletteTable ((const struct CompressedSpritePalette*) *((u32*) 0x8000130)) 
+#ifdef IgnoreWildPokemon
+#define gMonShinyPaletteTable ((const struct CompressedSpritePalette*) *((u32*) 0x8000134))
+#endif
+
 extern u8 AddPalRef(u8 Type, u16 PalTag);
 extern u8 BuildFrontierParty(struct Pokemon* party, u16 trainerNum, bool8 firstTrainer, bool8 ForPlayer, u8 side);
 
 extern const struct SwarmData gSwarmTable[];
 extern const species_t gSkyBattleBannedSpeciesList[];
+extern u8 sSafariZoneStatsWindowId;
 
 #ifdef AUTO_NAMING_SCREEN_SWAP
 static u8 GetTextCaretPosition(void);
@@ -2427,8 +2434,8 @@ static void ShowItemSpriteOnFind(unusedArg u16 itemId, unusedArg u8* spriteId)
 	}
 
 	//Fix the item that replaced the close bag arrow sprite
-	if (itemId == ITEM_TM59_DRAGON_PULSE && ITEM_TM59_DRAGON_PULSE == 0x177) //Replaced the arrow
-		itemPicId = ITEM_TM02_DRAGON_CLAW; //Replace the close bag arrow with a Dragon TM sprite
+	if (itemId == ITEM_TM59 && ITEM_TM59 == 0x177) //Replaced the arrow
+		itemPicId = ITEM_TM02; //Replace the close bag arrow with a Dragon TM sprite
 	else
 		itemPicId = itemId;
 
@@ -3065,4 +3072,87 @@ void SetScrollingListSize(unusedArg u8 taskId)
 	gTasks[taskId].data[3] = 1;	//y
 	gTasks[taskId].data[4] = 0xC;	//width?
 #endif
+}
+
+/* Ignore Wild Pokemon*/
+
+#ifdef IgnoreWildPokemon
+u8 CreateWindowFromRect(u8 left, u8 top, u8 width, u8 height) {
+	struct WindowTemplate template;
+	if (FlagGet(FLAG_WILD_POKEMON_PREBATTLE_SCREEN)) {
+		template = SetWindowTemplateFields(0, left + 1, top + 1, width, height, 15, 0x98);
+		FlagClear(FLAG_WILD_POKEMON_PREBATTLE_SCREEN);
+	} else {
+		template = SetWindowTemplateFields(0, left + 1, top + 1, width, height, 15, 0x038);
+	}
+	u8 windowId = AddWindow(&template);
+    PutWindowTilemap(windowId);
+    return windowId;
+}
+
+u8 CreateMonSprite_PicBox(u16 species, s16 x, s16 y)
+{
+	u16 spriteId;
+	if (FlagGet(FLAG_WILD_POKEMON_PREBATTLE_SCREEN) && IsMonShiny(&gEnemyParty[0])) {
+    spriteId = CreateMonPicSprite_HandleDeoxys(species, gEnemyParty[0].otid, gEnemyParty[0].personality, TRUE, x, y, 0, gMonShinyPaletteTable[species].tag);
+	PreservePaletteInWeather(IndexOfSpritePaletteTag(gMonShinyPaletteTable[species].tag) + 0x10);
+	} else {
+    spriteId = CreateMonPicSprite_HandleDeoxys(species, 0x0, 0x8000, TRUE, x, y, 0, gMonPaletteTable[species].tag);
+	PreservePaletteInWeather(IndexOfSpritePaletteTag(gMonPaletteTable[species].tag) + 0x10);
+	}
+    if (spriteId == 0xFFFF)
+        return MAX_SPRITES;
+    else
+        return spriteId;
+}
+
+#else
+u8 CreateWindowFromRect(u8 left, u8 top, u8 width, u8 height) {
+	struct WindowTemplate template = SetWindowTemplateFields(0, left + 1, top + 1, width, height, 15, 0x038);
+	u8 windowId = AddWindow(&template);
+    PutWindowTilemap(windowId);
+    return windowId;
+}
+#endif
+
+void CheckIfFirstEnemyMonShiny() {
+	Var8000 = IsMonShiny(&gEnemyParty[0]);
+}
+
+struct WindowTemplate template = 
+{
+    .bg = 0,
+    .tilemapLeft = 1,
+    .tilemapTop = 11,
+    .width = 8,
+    .height = 2,
+    .paletteNum = 15,
+    .baseBlock = 0x100
+};
+
+void MiniBoxOpen(void)
+{
+    sSafariZoneStatsWindowId = AddWindow(&template);
+
+    if (sSafariZoneStatsWindowId == 0xFF)
+        return;
+
+    PutWindowTilemap(sSafariZoneStatsWindowId);
+    DrawStdWindowFrame(sSafariZoneStatsWindowId, TRUE);
+
+    if (gLoadPointer == NULL)
+        return;
+
+    StringExpandPlaceholders(gStringVar4, gLoadPointer);
+    AddTextPrinterParameterized(sSafariZoneStatsWindowId, 2, gStringVar4, 4, 3, 255, NULL);
+    CopyWindowToVram(sSafariZoneStatsWindowId, 2);
+}
+
+void ClearMiniBox(void)
+{
+	sSafariZoneStatsWindowId = AddWindow(&template);
+
+    ClearStdWindowAndFrameToTransparent(sSafariZoneStatsWindowId, TRUE);
+    RemoveWindow(sSafariZoneStatsWindowId);
+	CopyWindowToVram(sSafariZoneStatsWindowId, 2);
 }

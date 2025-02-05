@@ -109,7 +109,7 @@
 #define BATTLE_TERRAIN_GRASS        	0
 #define BATTLE_TERRAIN_LONG_GRASS   	1
 #define BATTLE_TERRAIN_SAND         	2
-#define BATTLE_TERRAIN_UNDERWATER   	3
+#define BATTLE_TERRAIN_SNOWY		   	3
 #define BATTLE_TERRAIN_WATER        	4
 #define BATTLE_TERRAIN_POND         	5
 #define BATTLE_TERRAIN_MOUNTAIN     	6
@@ -118,14 +118,27 @@
 #define BATTLE_TERRAIN_PLAIN        	9
 #define BATTLE_TERRAIN_INSIDE_2       	0xA
 #define BATTLE_TERRAIN_INSIDE_3       	0xB
-#define BATTLE_TERRAIN_INSIDE_4       	0xC
-#define BATTLE_TERRAIN_INSIDE_5       	0xD
+#define BATTLE_TERRAIN_INSIDE_4	       	0xC // Used by gym leaders  TODO: More interesting graphic here
+#define BATTLE_TERRAIN_INSIDE_5	       	0xD
 #define BATTLE_TERRAIN_INSIDE_6       	0xE
 #define BATTLE_TERRAIN_LORLEI       	0xF
 #define BATTLE_TERRAIN_BRUNO 			0x10
 #define BATTLE_TERRAIN_AGATHA       	0x11
 #define BATTLE_TERRAIN_LANCE 			0x12
 #define BATTLE_TERRAIN_CHAMPION       	0x13
+
+#ifdef NEW_BATTLE_BACKGROUNDS
+
+#define BATTLE_TERRAIN_SPOOKY			0x14
+#define BATTLE_TERRAIN_DESERT			0x15
+#define BATTLE_TERRAIN_TORMA			0x16
+#define BATTLE_TERRAIN_TORMA_DEPTHS		0x17
+#define BATTLE_TERRAIN_SCALDING_SPA		0x18
+#define BATTLE_TERRAIN_GYM				0x19
+#define BATTLE_TERRAIN_FOREST			0x1A
+#define BATTLE_TERRAIN_FOREST_PERADON	0x1B
+
+#endif
 
 //For Unbound
 #ifdef UNBOUND
@@ -400,13 +413,17 @@ struct ProtectStruct
     u32 flag_x20 : 1;           	// 0x20
     u32 obstruct : 1;           	// 0x40
     u32 obstructDamage : 1;         // 0x80
+	u32 SilkTrap : 1;           	
+    u32 SilkTrapDamage : 1;
     /* field_3 */
     u32 KingsShield : 1;
     u32 SpikyShield : 1;
 	u32 BanefulBunker : 1;
+	u32 BurningBulwark : 1;
     u32 kingsshield_damage : 1;
     u32 spikyshield_damage : 1;
     u32 banefulbunker_damage : 1;
+	u32 BurningBulwark_damage : 1;
     u32 enduredSturdy : 1;
     u32 Field3 : 1;
 
@@ -787,6 +804,13 @@ struct NewBattleStruct
 	u8 quickDrawRandomNumber[MAX_BATTLERS_COUNT];
 	u8 powerShifted[MAX_BATTLERS_COUNT];
 	u16 tookAbilityFrom[MAX_BATTLERS_COUNT]; //Helps display the correct Ability when one has been passed around
+	u8 GlaiveRushTimers[MAX_BATTLERS_COUNT];
+	u8 rageFistCounter[MAX_BATTLERS_COUNT];
+	u8 SaltcureTimers[MAX_BATTLERS_COUNT];
+	u8 CudChewCounter[MAX_BATTLERS_COUNT];
+	u8 ElectroCounter[MAX_BATTLERS_COUNT];
+	u8 quarkDriveActivated[MAX_BATTLERS_COUNT];
+	u8 ProtosynthesisActivated[MAX_BATTLERS_COUNT];
 
 	//Bit Fields for Banks
 	u8 MicleBerryBits;
@@ -909,6 +933,7 @@ struct NewBattleStruct
 	bool8 isTrainerBattle : 1;
 	bool8 cottonDownActive : 1;
 	bool8 cramorantTransformed : 1;
+	bool8 activateTemperFlare : 1;
 
 	//Other
 	u16 LastUsedMove;

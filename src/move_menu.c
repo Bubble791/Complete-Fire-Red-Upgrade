@@ -1815,6 +1815,19 @@ u8 TrySetCantSelectMoveBattleScript(void)
 		++limitations;
 	}
 
+	else if(move == MOVE_GIGATONHAMMER && gLastUsedMoves[gActiveBattler] == MOVE_GIGATONHAMMER)
+    {
+        gCurrentMove = MOVE_GIGATONHAMMER;
+        gSelectionBattleScripts[gActiveBattler] = BattleScript_SelectingNotAllowedGigatonHammer;
+        ++limitations;
+    }
+	else if(move == MOVE_BLOODMOON && gLastUsedMoves[gActiveBattler] == MOVE_BLOODMOON)
+    {
+        gCurrentMove = MOVE_BLOODMOON;
+        gSelectionBattleScripts[gActiveBattler] = BattleScript_SelectingNotAllowedGigatonHammer;
+        ++limitations;
+    }
+
 	if (limitations != 0)
 	{
 		gNewBS->dynamaxData.toBeUsed[gActiveBattler] = FALSE;

@@ -1688,6 +1688,7 @@ bool8 ShouldCourtChange(u8 bankAtk, u8 bankDef)
 		|| GOOD_IDEA(maxWildfireTimers, FALSE)
 		|| GOOD_IDEA(maxCannonadeTimers, FALSE)
 		|| GOOD_IDEA(maxVolcalithTimers, FALSE)
+		|| GOOD_IDEA(SaltcureTimers, FALSE)
 		|| GOOD_IDEA_VANILLA(reflectTimer, TRUE)
 		|| GOOD_IDEA_VANILLA(lightscreenTimer, TRUE)
 		|| GOOD_IDEA_VANILLA(safeguardTimer, TRUE)
@@ -2077,7 +2078,7 @@ static bool8 ShouldUseSubstitute(u8 bankAtk, u8 bankDef)
 
 	if (defPrediction != MOVE_NONE)
 	{
-		if (MoveWouldHitFirst(MOVE_SUBSTITUTE, bankAtk, bankDef)) //Attacker goes first
+		if (MoveWouldHitFirst((MOVE_SUBSTITUTE || MOVE_SHEDTAIL), bankAtk, bankDef)) //Attacker goes first
 		{
 			if (GetFinalAIMoveDamage(defPrediction, bankDef, bankAtk, 1, NULL) < MathMax(1, gBattleMons[bankAtk].maxHP / 4))
 				return TRUE;
